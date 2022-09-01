@@ -9,12 +9,12 @@ jobs:
   build:
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./playwright-test
     steps:
       - name: Checkout webapp
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          token: ${{ secrets.COMMONLIB_ACCESS_TOKEN }}
 
       - uses: actions/setup-node@v3
         with:
@@ -34,7 +34,6 @@ jobs:
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
           BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
           BROWSERSTACK_SESSION_NAME: ${{ github.run_id }}
-        uses: GabrielBB/xvfb-action@v1
-        with:
-          run: yarn test:e2e:aws:browserstack
+        run: |
+          TEST_RUN_SERVER="true" TEST_BASE_URL="http://localhost:4000" yarn playwright test
 

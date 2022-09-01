@@ -1,0 +1,40 @@
+name: Build and Test Project
+on:
+  pull_request:
+    branches: [dev, master]
+concurrency:
+  group: webapp-build
+  cancel-in-progress: false
+jobs:
+  build:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout webapp
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.COMMONLIB_ACCESS_TOKEN }}
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Install playwright deps
+        run: |
+          yarn playwright install --with-deps
+          yarn playwright install chrome
+
+      - name: Run e2e tests
+        env:
+          BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+          BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+          BROWSERSTACK_SESSION_NAME: ${{ github.run_id }}
+        uses: GabrielBB/xvfb-action@v1
+        with:
+          run: yarn test:e2e:aws:browserstack
+
